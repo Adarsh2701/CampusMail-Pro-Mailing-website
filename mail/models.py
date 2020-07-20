@@ -7,6 +7,7 @@ class User(AbstractUser):
 
 
 class Email(models.Model):
+    objects = None
     user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="emails")
     sender = models.ForeignKey("User", on_delete=models.PROTECT, related_name="emails_sent")
     recipients = models.ManyToManyField("User", related_name="emails_received")
@@ -23,7 +24,7 @@ class Email(models.Model):
             "recipients": [user.email for user in self.recipients.all()],
             "subject": self.subject,
             "body": self.body,
-            "timestamp": self.timestamp.strftime("%b %-d %Y, %-I:%M %p"),
+            "timestamp": self.timestamp.strftime("%b %#d %Y, %#I:%M %p"),
             "read": self.read,
             "archived": self.archived
         }
