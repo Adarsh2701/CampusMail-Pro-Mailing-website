@@ -9,3 +9,11 @@ textarea {
     margin-bottom: 10px;
     border: 2px solid black;
 }
+
+#timestamp {
+    float: right;
+}
+
+#subject {
+    text-align: center;
+}

@@ -1,4 +1,4 @@
-let recipients, subject, body, id
+let recipients, subject, body, id, element, btnName
 document.addEventListener('DOMContentLoaded', function() {
 
   // Use buttons to toggle between views
@@ -10,12 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // By default, load the inbox
   load_mailbox('inbox');
+
 })
 
 function compose_email() {
     debugger;
       document.querySelector('#emails-view').style.display = 'none';
       document.querySelector('#compose-view').style.display = 'block';
+      document.querySelector('#open-email').style.display = 'none';
+      // document.querySelector('#reply-view').style.display = 'none';
 
       document.querySelector('#compose-recipients').value = '';
       document.querySelector('#compose-subject').value = '';
@@ -43,7 +46,7 @@ function compose_email() {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
-  location.replace("http://127.0.0.1:8000/")
+  location.replace('http://127.0.0.1:8000/');
 
     return false;
   }
@@ -58,6 +61,16 @@ function archive(id) {
     })
   })
 }
+
+// Unarchiving a mail
+function unarchive(id) {
+  fetch(`emails/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      archived: false
+    })
+  })
+}
   
 // To mark read and unread
 function read(id) {
@@ -67,60 +80,43 @@ function read(id) {
       read: true 
     })
   })
-  
 }
-
 
 function load_mailbox(mailbox) {
 debugger;
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
-  
+  document.querySelector('#open-email').style.display = 'none';
+  // document.querySelector('#reply-view').style.display = 'none';
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
-  if(mailbox === "archive") {
-
-  }
   console.log("Above fetch")
   fetch(`emails/${mailbox}`)
   .then((response) => response.json())
   .then((emails) => {
   emails.forEach((element) => {
-    console.log(element)
     
     const newDiv = document.createElement('div');
-    newDiv.id = "mail-newDiv";
-    newDiv.innerHTML = `<div><b>${element.sender}</b>   ${element.subject}   ${element.timestamp}</div>`;
+    newDiv.style.border = '1px solid black';
+    newDiv.style.padding = '10px';
+    newDiv.style.marginBottom = '5px';
+    newDiv.style.borderRadius = '10px';
+    newDiv.id = `mail-newDiv-${element.id}`;
+    newDiv.innerHTML = `<div><b>${element.sender}</b>  ${element.subject} <div id="timestamp">${element.timestamp}</div></div>`;
     document.querySelector('#emails-view').appendChild(newDiv);
-
-
-    // if(element.read === true) {
-    //   document.querySelector('#mail-newDiv').style.background = "white";
-    // }
-    // else {
-    //   document.querySelector('#mail-newDiv').style.background = "#99989861";
-    // }
     
-    document.querySelector('#mail-newDiv').addEventListener("click", function () {
-      open_mail(element.id);
-
-      // Creating a reply button
-      const replyBtn = document.createElement('button');
-      replyBtn.className = "btn btn-sm btn-outline-primary";
-      replyBtn.id = "reply";
-      replyBtn.innerHTML = "Reply";
-
-      // Creating a archive button
-      const archiveBtn = document.createElement('button');
-      archiveBtn.className = "btn btn-sm btn-outline-primary";
-      archiveBtn.id = "archive";
-      archiveBtn.innerHTML = "Archive";
-      document.querySelector('#emails-view').append(replyBtn, archiveBtn)
-      }
-    );
-    // document.querySelector('#archive').addEventListener('click', archive(element.id))
+    document.querySelector(`#mail-newDiv-${element.id}`).addEventListener("click", function () {
+      open_mail(element.id, mailbox);
+    });
+    
+    if(element.read === true) {
+      newDiv.style.backgroundColor = '#99989861';
+    }
+    else {
+      newDiv.style.backgroundColor = 'white';
+    }
   })
 })
   .catch((error) => {
@@ -130,39 +126,63 @@ debugger;
 
 
 // Function to read the mail
- function open_mail(id) {
+ function open_mail(id, mailbox) {
+   document.querySelector('#open-email').innerHTML = "";
+
+  document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#open-email').style.display = 'block';
+
+
    // Calling the read function
    read(id)
+   if (mailbox === "archive") {
+     btnName = "Unarchive";
+   }
+   else {
+     btnName = "Archive";
+   }
    fetch(`emails/${id}`)
    .then(response => response.json())
    .then(data => {
      // New div for displaying the contents of the mail
+    //  document.querySelector('#open-mail').innerHTML = "";
      const view_email = document.createElement('div')
+     view_email.className = "content-div";
      view_email.innerHTML = `<div>
      <p><b>Sender:</b> ${data.sender}</p>
      <p><b>Recipients: </b>${data.recipients}</p>
      <p><b>Timestamp: </b>${data.timestamp}</p>
      <p><b>Subject: </b>${data.subject}</p>
-     <br><br>
-     <h3>Body</h3>
+     <br>
      <p>${data.body}</p>
+     <button class="btn btn-sm btn-outline-primary" id="replyBtn">Reply</button>
+     <button class="btn btn-sm btn-outline-primary" id="archiveBtn">${btnName}</button>
      </div>`
-     document.querySelector('#emails-view').appendChild(view_email)
 
-    //  document.querySelector('#emails-view').style.display = 'none';
-    //  document.querySelector('#view-email').style.display = 'block';  
-   })
- }
+     document.querySelector('#open-email').appendChild(view_email)
+     
+     document.querySelector('#archiveBtn').onclick = () => {
+       if (mailbox === "archive") {
+        unarchive(id);   
+       }
+       else {
+        archive(id);
+       }
+       location.replace('http://127.0.0.1:8000/');
+    }
+    document.querySelector('#replyBtn').onclick = () => {
+      reply_email(data.sender, data.body, data.subject, data.timestamp);
+    }
+  })
+}
 
-//  function readHTML(content) {
-//    debugger;
-//     htmlValue = `<div>
-//     <p><b>Sender:</b> ${content.sender}</p>
-//     <p><b>Recipients: </b>${content.recipients}</p>
-//     <p><b>Timestamp: </b>${content.timestamp}</p>
-//     <p><b>Subject: </b>${content.subject}</p>
-//     <br><br>
-//     <h3>Body></h3>
-//     <p>${content.body}</p>
-//     </div>`
-//  }
+function reply_email(sender, body, subject, timestamp) {
+  compose_email()
+  document.querySelector("#compose-recipients").value = sender;
+  document.querySelector("#compose-subject").value = `Re: ${subject}`;
+
+  pre_fill = `On ${timestamp} ${sender} wrote:\n${body}\n`;
+
+  document.querySelector("#compose-body").value = pre_fill;
+}

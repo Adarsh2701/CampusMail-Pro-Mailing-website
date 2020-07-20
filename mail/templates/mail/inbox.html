@@ -13,7 +13,8 @@
 
     <div id="emails-view">
     </div>
-
+    <div id="open-email"></div>
+    {% comment %} <div id="view-email"></div> {% endcomment %}
     <div id="compose-view">
         <h3>New Email</h3>
         <form id="compose-form" method="post" action="{% url 'index' %}">
@@ -31,6 +32,24 @@
             <input type="submit" class="btn btn-primary"/>
         </form>
     </div>
+
+     {% comment %} <div id="reply-view">
+        <h3>Reply Email</h3>
+        <form id="compose-form" method="post" action="{% url 'index' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                From: <input disabled class="form-control" value="{{ request.user.email }}">
+            </div>
+            <div class="form-group">
+                To: <input id="compose-recipients" class="form-control">
+            </div>
+            <div class="form-group">
+                <input class="form-control" id="compose-subject" placeholder="Subject">
+            </div>
+            <textarea class="form-control" id="compose-body" placeholder="Body"></textarea>
+            <input type="submit" class="btn btn-primary"/>
+        </form>
+    </div> {% endcomment %}
 {% endblock %}
 
 {% block script %}
